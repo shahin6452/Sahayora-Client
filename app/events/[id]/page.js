@@ -112,7 +112,7 @@ export default function EventDetailsPage() {
     return (
       <main className="min-h-screen bg-background px-5 py-20">
         <div className="mx-auto max-w-5xl animate-pulse">
-          <div className="h-80 rounded-3xl bg-surface-secondary" />
+          <div className="h-72 rounded-3xl bg-surface-secondary" />
           <div className="mt-8 h-8 w-2/3 rounded bg-surface-secondary" />
           <div className="mt-4 h-4 w-1/2 rounded bg-surface-secondary" />
         </div>
@@ -144,6 +144,7 @@ export default function EventDetailsPage() {
   return (
     <main className="min-h-screen bg-background">
       <section className="mx-auto max-w-6xl px-5 py-12 sm:px-8 lg:px-10 lg:py-16">
+
         <Link
           href="/events"
           className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-primary hover:gap-3"
@@ -152,20 +153,26 @@ export default function EventDetailsPage() {
         </Link>
 
         <div className="overflow-hidden rounded-3xl border border-border bg-surface">
-          <div className="relative h-64 bg-surface-secondary sm:h-96">
+
+          {/* Event Image */}
+          <div className="relative h-[220px] w-full overflow-hidden bg-surface-secondary sm:h-[280px] lg:h-[320px]">
             <img
               src={event.image}
               alt={event.title}
-              className="h-full w-full object-cover"
+              className="absolute inset-0 block h-full w-full object-cover"
             />
 
-            <span className="absolute left-5 top-5 rounded-full bg-white px-5 py-2 text-sm font-bold text-primary shadow">
+            <span className="absolute left-5 top-5 z-10 rounded-full bg-white px-5 py-2 text-sm font-bold text-primary shadow">
               {event.type}
             </span>
           </div>
 
-          <div className="grid gap-10 p-6 sm:p-10 lg:grid-cols-[1fr_300px]">
-            <div>
+          {/* Event Content */}
+          <div className="grid grid-cols-1 gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-10 lg:p-10">
+
+            {/* Event Information */}
+            <div className="min-w-0">
+
               <p className="text-sm font-bold uppercase tracking-wider text-primary">
                 {formatEventDate(event.date)}
               </p>
@@ -179,7 +186,7 @@ export default function EventDetailsPage() {
                 <span>{event.location}</span>
               </div>
 
-              <div className="mt-10">
+              <div className="mt-8">
                 <h2 className="text-xl font-bold text-foreground">
                   About This Event
                 </h2>
@@ -190,7 +197,9 @@ export default function EventDetailsPage() {
               </div>
             </div>
 
-            <aside className="h-fit rounded-2xl bg-surface-secondary p-6">
+            {/* Join Event Card */}
+            <aside className="h-fit w-full self-start rounded-2xl bg-surface-secondary p-6">
+
               <h2 className="text-lg font-bold text-foreground">
                 Interested in joining?
               </h2>
@@ -215,12 +224,13 @@ export default function EventDetailsPage() {
               ) : (
                 <Link
                   href="/login"
-                  className="mt-6 block rounded-full bg-primary px-5 py-3 text-center font-bold text-white transition hover:bg-primary-hover"
+                  className="mt-6 block w-full rounded-full bg-primary px-5 py-3 text-center font-bold text-white transition hover:bg-primary-hover"
                 >
                   Login to Join
                 </Link>
               )}
             </aside>
+
           </div>
         </div>
       </section>
