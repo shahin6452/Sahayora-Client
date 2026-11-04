@@ -1,51 +1,22 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useAuth } from "./providers";
 import { signOut } from "../lib/auth-client";
 import { toast } from "sonner";
 
-const events = [
-  {
-    id: 1,
-    category: "COMMUNITY CARE",
-    title: "A Warmer Winter for Everyone",
-    description:
-      "Help families stay warm by collecting and distributing winter essentials to those who need them.",
-    date: "DEC 15, 2026",
-    location: "Dhaka, Bangladesh",
-    image:
-      "https://images.unsplash.com/photo-1483664852095-d6cc6870702d?w=900&q=85",
-    color: "#F08A72",
-    number: "01",
-  },
-  {
-    id: 2,
-    category: "ENVIRONMENT",
-    title: "Grow Something Good",
-    description:
-      "Bring your community together for a day of planting trees and creating greener neighbourhoods.",
-    date: "DEC 20, 2026",
-    location: "Sylhet, Bangladesh",
-    image:
-      "https://images.unsplash.com/photo-1448375240586-882707db888b?w=900&q=85",
-    color: "#A59AF2",
-    number: "02",
-  },
-  {
-    id: 3,
-    category: "EDUCATION",
-    title: "Pages Full of Possibilities",
-    description:
-      "Donate books and learning materials to help children discover new opportunities through education.",
-    date: "DEC 28, 2026",
-    location: "Chattogram, Bangladesh",
-    image:
-      "https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=900&q=85",
-    color: "#E8C96A",
-    number: "03",
-  },
-];
+const eventColors = ["#F08A72", "#A59AF2", "#E8C96A"];
+
+const formatEventDate = (value) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "DATE TBA";
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).toUpperCase();
+};
 
 const ArrowUpRight = () => (
   <span aria-hidden="true" className="text-xl leading-none">
@@ -57,6 +28,45 @@ export default function Home() {
   const { data: session, isPending } = useAuth();
   const user = session?.user;
 
+  const [events, setEvents] = useState([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadEvents = async () => {
+      try {
+        const apiUrl =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+        const response = await fetch(`${apiUrl}/api/events?limit=6`, {
+          signal: controller.signal,
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Could not load upcoming events.");
+        }
+
+        const result = await response.json();
+        setEvents(Array.isArray(result.events) ? result.events : []);
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          toast.error(error.message || "Failed to load upcoming events.");
+          setEvents([]);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setEventsLoading(false);
+        }
+      }
+    };
+
+    loadEvents();
+
+    return () => controller.abort();
+  }, []);
+
   const handleLogout = async () => {
     try {
       await signOut();
@@ -65,6 +75,7 @@ export default function Home() {
       toast.error(error.message || "Logout failed!");
     }
   };
+
   return (
     <main className="overflow-hidden bg-background text-foreground">
       {/* NAVBAR */}
@@ -86,24 +97,27 @@ export default function Home() {
             <Link href="#about" className="transition hover:text-primary">
               About Us
             </Link>
-            <Link href="#how-it-works" className="transition hover:text-primary">
+            <Link
+              href="#how-it-works"
+              className="transition hover:text-primary"
+            >
               How It Works
             </Link>
           </nav>
 
           <div className="flex items-center gap-3">
-            {!isPending && (
-              user ? (
+            {!isPending &&
+              (user ? (
                 <div className="group relative">
                   <button className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-2 border-primary bg-primary-light font-bold text-primary">
                     <img
                       src={
-                        user.image ||
+                        user.image?.trim() ||
                         `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(
                           user.name || user.email || "Sahayora"
                         )}`
                       }
-                      alt={user.name || "Profile"}
+                      alt={`${user.name || "User"} avatar`}
                       className="h-full w-full object-cover"
                     />
                   </button>
@@ -119,15 +133,27 @@ export default function Home() {
                       </p>
 
                       <div className="border-t border-border pt-2">
-                        <Link href="/create-event" className="block rounded-lg px-3 py-2 text-sm hover:bg-primary-light hover:text-primary">
+                        <Link
+                          href="/create-event"
+                          className="block rounded-lg px-3 py-2 text-sm hover:bg-primary-light hover:text-primary"
+                        >
                           Create Event
                         </Link>
-                        <Link href="/manage-events" className="block rounded-lg px-3 py-2 text-sm hover:bg-primary-light hover:text-primary">
+
+                        <Link
+                          href="/manage-events"
+                          className="block rounded-lg px-3 py-2 text-sm hover:bg-primary-light hover:text-primary"
+                        >
                           Manage Events
                         </Link>
-                        <Link href="/joined-events" className="block rounded-lg px-3 py-2 text-sm hover:bg-primary-light hover:text-primary">
+
+                        <Link
+                          href="/joined-events"
+                          className="block rounded-lg px-3 py-2 text-sm hover:bg-primary-light hover:text-primary"
+                        >
                           Joined Events
                         </Link>
+
                         <button
                           onClick={handleLogout}
                           className="mt-2 w-full rounded-lg border-t border-border px-3 py-2 text-left text-sm font-bold text-red-500 hover:bg-red-50"
@@ -154,11 +180,8 @@ export default function Home() {
                     Get Started <span className="ml-1">↗</span>
                   </Link>
                 </>
-              )
-            )}
+              ))}
           </div>
-
-
         </div>
       </header>
 
@@ -223,6 +246,7 @@ export default function Home() {
                   />
                 ))}
               </div>
+
               <div>
                 <p className="text-sm font-extrabold">People who care.</p>
                 <p className="text-xs text-muted">
@@ -291,14 +315,19 @@ export default function Home() {
       </section>
 
       {/* ABOUT */}
-      <section id="about" className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:px-10 lg:py-32">
+      <section
+        id="about"
+        className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:px-10 lg:py-32"
+      >
         <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-accent">
               WHY SAHAYORA?
             </p>
+
             <h2 className="mt-5 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-              Good things grow when we grow <span className="text-primary">together.</span>
+              Good things grow when we grow{" "}
+              <span className="text-primary">together.</span>
             </h2>
           </div>
 
@@ -309,6 +338,7 @@ export default function Home() {
               create a ripple of positive change. Sahayora brings people and
               meaningful causes together.
             </p>
+
             <Link
               href="/events"
               className="inline-flex w-fit items-center gap-3 border-b-2 border-primary pb-2 font-extrabold text-primary transition hover:gap-5"
@@ -327,10 +357,12 @@ export default function Home() {
               <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-accent">
                 SIMPLE AS THAT
               </p>
+
               <h2 className="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl">
                 Three steps. <span className="text-primary">Real impact.</span>
               </h2>
             </div>
+
             <p className="max-w-sm leading-7 text-muted">
               You don't need to change the whole world. Just start somewhere.
             </p>
@@ -368,12 +400,19 @@ export default function Home() {
                   <span className="text-sm font-extrabold tracking-widest text-accent">
                     {item.number}
                   </span>
+
                   <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-light text-3xl text-primary">
                     {item.symbol}
                   </span>
                 </div>
-                <h3 className="mt-10 text-2xl font-extrabold">{item.title}</h3>
-                <p className="mt-4 leading-7 text-muted">{item.description}</p>
+
+                <h3 className="mt-10 text-2xl font-extrabold">
+                  {item.title}
+                </h3>
+
+                <p className="mt-4 leading-7 text-muted">
+                  {item.description}
+                </p>
               </div>
             ))}
           </div>
@@ -381,15 +420,20 @@ export default function Home() {
       </section>
 
       {/* EVENTS */}
-      <section id="events" className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:px-10 lg:py-32">
+      <section
+        id="events"
+        className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:px-10 lg:py-32"
+      >
         <div className="mb-14 flex flex-col justify-between gap-6 sm:flex-row sm:items-end">
           <div>
             <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-accent">
               FIND YOUR NEXT GOOD THING
             </p>
+
             <h2 className="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl">
               Get out there. <span className="text-primary">Do good.</span>
             </h2>
+
             <p className="mt-4 max-w-lg leading-7 text-muted">
               A few ways to get involved and make your community a better place.
             </p>
@@ -403,58 +447,97 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {events.map((event) => (
-            <article
-              key={event.id}
-              className="group overflow-hidden rounded-2xl border border-border bg-surface transition hover:-translate-y-2 hover:shadow-xl"
-            >
-              <div className="relative aspect-[1.35] overflow-hidden">
-                <img
-                  src={event.image}
-                  alt={event.title}
-                  className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
-                />
-                <span
-                  className="absolute left-5 top-5 rounded-full px-4 py-2 text-[10px] font-extrabold tracking-[0.12em] text-foreground"
-                  style={{ backgroundColor: event.color }}
-                >
-                  {event.category}
-                </span>
-                <span className="absolute bottom-4 right-5 text-5xl font-extrabold text-white/80">
-                  {event.number}
-                </span>
-              </div>
+        {eventsLoading ? (
+          <div
+            className="grid gap-8 md:grid-cols-2 lg:grid-cols-3"
+            aria-label="Loading events"
+          >
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div
+                key={index}
+                className="overflow-hidden rounded-2xl border border-border bg-surface"
+              >
+                <div className="aspect-[1.35] animate-pulse bg-surface-secondary" />
 
-              <div className="p-6 sm:p-7">
-                <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-muted">
-                  <span>◷ {event.date}</span>
-                  <span>⌖ {event.location}</span>
+                <div className="space-y-4 p-7">
+                  <div className="h-3 w-1/2 animate-pulse rounded bg-surface-secondary" />
+                  <div className="h-6 w-4/5 animate-pulse rounded bg-surface-secondary" />
+                  <div className="h-16 animate-pulse rounded bg-surface-secondary" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : events.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border bg-surface px-6 py-14 text-center">
+            <p className="text-xl font-extrabold">
+              No upcoming events yet
+            </p>
+
+            <p className="mt-3 text-sm text-muted">
+              New community events will appear here when they are created.
+            </p>
+
+            <Link
+              href={user ? "/create-event" : "/register"}
+              className="mt-6 inline-flex rounded-full bg-primary px-6 py-3 text-sm font-bold text-white hover:bg-primary-hover"
+            >
+              {user ? "Create an event" : "Join Sahayora"}
+            </Link>
+          </div>
+        ) : (
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {events.map((event, index) => (
+              <article
+                key={event._id || event.id}
+                className="group overflow-hidden rounded-2xl border border-border bg-surface transition hover:-translate-y-2 hover:shadow-xl"
+              >
+                <div className="relative aspect-[1.35] overflow-hidden">
+                  <img
+                    src={event.image}
+                    alt={event.title}
+                    className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                  />
+
+                  <span
+                    className="absolute left-5 top-5 rounded-full px-4 py-2 text-[10px] font-extrabold tracking-[0.12em] text-foreground"
+                    style={{
+                      backgroundColor:
+                        eventColors[index % eventColors.length],
+                    }}
+                  >
+                    {(event.type || "COMMUNITY").toUpperCase()}
+                  </span>
+
+                  <span className="absolute bottom-4 right-5 text-5xl font-extrabold text-white/80">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
                 </div>
 
-                <h3 className="mt-5 text-2xl font-extrabold leading-tight transition group-hover:text-primary">
-                  {event.title}
-                </h3>
+                <div className="p-6 sm:p-7">
+                  <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-muted">
+                    <span>◷ {formatEventDate(event.date)}</span>
+                    <span>⌖ {event.location}</span>
+                  </div>
 
-                <p className="mt-4 text-sm leading-7 text-muted">
-                  {event.description}
-                </p>
+                  <h3 className="mt-5 text-2xl font-extrabold leading-tight transition group-hover:text-primary">
+                    {event.title}
+                  </h3>
 
-                <Link
-                  href="/events"
-                  className="mt-7 inline-flex items-center gap-3 border-b border-foreground/20 pb-2 text-sm font-extrabold transition group-hover:border-primary group-hover:text-primary"
-                >
-                  Explore event <ArrowUpRight />
-                </Link>
-              </div>
-            </article>
-          ))}
-        </div>
+                  <p className="mt-4 text-sm leading-7 text-muted">
+                    {event.description}
+                  </p>
 
-        <p className="mt-7 text-center text-xs text-muted">
-          Preview events for design purposes. Live events will be loaded from
-          the database.
-        </p>
+                  <Link
+                    href="/events"
+                    className="mt-7 inline-flex items-center gap-3 border-b border-foreground/20 pb-2 text-sm font-extrabold transition group-hover:border-primary group-hover:text-primary"
+                  >
+                    Explore event <ArrowUpRight />
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* COMMUNITY CTA */}
@@ -468,9 +551,11 @@ export default function Home() {
             <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#F08A72]">
               YOUR TURN TO MAKE A DIFFERENCE
             </p>
+
             <h2 className="mt-6 text-4xl font-extrabold leading-tight tracking-tight sm:text-6xl">
               The world needs more people like you.
             </h2>
+
             <p className="mt-6 max-w-lg leading-8 text-white/65">
               Join a community that believes in kindness, action, and making
               good things happen. Your next step starts here.
@@ -499,10 +584,12 @@ export default function Home() {
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary font-bold text-white">
                   S
                 </span>
+
                 <span className="text-xl font-extrabold tracking-tight">
                   sahayora<span className="text-accent">.</span>
                 </span>
               </Link>
+
               <p className="mt-5 text-sm leading-7 text-muted">
                 Together, we make a difference. Bringing people and meaningful
                 causes together for a better tomorrow.
@@ -512,19 +599,33 @@ export default function Home() {
             <div className="flex flex-wrap gap-12 text-sm">
               <div>
                 <h4 className="mb-4 font-extrabold">Explore</h4>
+
                 <div className="flex flex-col gap-3 text-muted">
-                  <Link href="/events" className="hover:text-primary">Events</Link>
-                  <Link href="#about" className="hover:text-primary">About us</Link>
-                  <Link href="#how-it-works" className="hover:text-primary">How it works</Link>
+                  <Link href="/events" className="hover:text-primary">
+                    Events
+                  </Link>
+                  <Link href="#about" className="hover:text-primary">
+                    About us
+                  </Link>
+                  <Link href="#how-it-works" className="hover:text-primary">
+                    How it works
+                  </Link>
                 </div>
               </div>
 
               <div>
                 <h4 className="mb-4 font-extrabold">Get involved</h4>
+
                 <div className="flex flex-col gap-3 text-muted">
-                  <Link href="/register" className="hover:text-primary">Become a volunteer</Link>
-                  <Link href="/login" className="hover:text-primary">Log in</Link>
-                  <Link href="/register" className="hover:text-primary">Create account</Link>
+                  <Link href="/register" className="hover:text-primary">
+                    Become a volunteer
+                  </Link>
+                  <Link href="/login" className="hover:text-primary">
+                    Log in
+                  </Link>
+                  <Link href="/register" className="hover:text-primary">
+                    Create account
+                  </Link>
                 </div>
               </div>
             </div>
