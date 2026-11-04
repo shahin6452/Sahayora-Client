@@ -1,5 +1,6 @@
 
 import { Manrope, DM_Sans } from "next/font/google";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -31,7 +32,7 @@ export const metadata = {
     "Donation",
   ],
 };
-//  
+
 export default function RootLayout({ children }) {
   return (
     <html
@@ -39,7 +40,17 @@ export default function RootLayout({ children }) {
       className={`${manrope.variable} ${dmSans.variable} antialiased`}
       suppressHydrationWarning
     >
-      <body>{children}</body>
+      <body>
+        {children}
+
+        <Toaster
+          position="top-center"
+          richColors
+          closeButton
+          duration={3000}
+          theme="light"
+        />
+      </body>
     </html>
   );
 }
