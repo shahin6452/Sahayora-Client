@@ -1,6 +1,6 @@
-
 import { Manrope, DM_Sans } from "next/font/google";
 import { Toaster } from "sonner";
+import { AuthProvider } from "./providers";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -41,7 +41,9 @@ export default function RootLayout({ children }) {
       suppressHydrationWarning
     >
       <body>
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
 
         <Toaster
           position="top-center"
