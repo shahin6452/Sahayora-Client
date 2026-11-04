@@ -96,15 +96,16 @@ export default function Home() {
               user ? (
                 <div className="group relative">
                   <button className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-2 border-primary bg-primary-light font-bold text-primary">
-                    {user.image ? (
-                      <img
-                        src={user.image}
-                        alt={user.name || "Profile"}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      user.name?.charAt(0).toUpperCase() || "U"
-                    )}
+                    <img
+                      src={
+                        user.image ||
+                        `https://api.dicebear.com/9.x/adventurer/svg?seed=${encodeURIComponent(
+                          user.name || user.email || "Sahayora"
+                        )}`
+                      }
+                      alt={user.name || "Profile"}
+                      className="h-full w-full object-cover"
+                    />
                   </button>
 
                   <div className="invisible absolute right-0 top-full z-50 w-56 pt-3 opacity-0 transition-all group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
