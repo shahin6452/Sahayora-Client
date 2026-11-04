@@ -27,6 +27,7 @@ export default function EventDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [joining, setJoining] = useState(false);
+  const [hasJoined, setHasJoined] = useState(false);
 
   useEffect(() => {
     if (!params.id) return;
@@ -77,11 +78,31 @@ export default function EventDetailsPage() {
     try {
       setJoining(true);
 
-      // Join API will be connected in the next step.
-      toast.info("Join Event feature is coming next.");
+      const response = await fetch(
+        `${API_URL}/api/events/${params.id}/join`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 409) {
+          setHasJoined(true);
+        }
+
+        throw new Error(data.message || "Failed to join event");
+      }
+
+      setHasJoined(true);
+      toast.success(data.message || "Successfully joined the event!");
     } catch (err) {
-      toast.error("Unable to join this event.");
+      toast.error(err.message || "Unable to join this event.");
     } finally {
       setJoining(false);
     }
@@ -182,10 +203,14 @@ export default function EventDetailsPage() {
               {session?.user ? (
                 <button
                   onClick={handleJoinEvent}
-                  disabled={joining}
+                  disabled={joining || hasJoined}
                   className="mt-6 w-full rounded-full bg-primary px-5 py-3 font-bold text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {joining ? "Please wait..." : "Join Event"}
+                  {joining
+                    ? "Please wait..."
+                    : hasJoined
+                      ? "Already Joined"
+                      : "Join Event"}
                 </button>
               ) : (
                 <Link
