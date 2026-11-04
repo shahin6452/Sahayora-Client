@@ -41,6 +41,9 @@ export default function JoinedEventsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [leaving, setLeaving] = useState(false);
+
   useEffect(() => {
     if (isPending) return;
 
@@ -88,6 +91,41 @@ export default function JoinedEventsPage() {
     return () => controller.abort();
   }, [session?.user?.id, isPending, router]);
 
+  const handleLeaveEvent = async () => {
+    if (!selectedEvent || leaving) return;
+
+    try {
+      setLeaving(true);
+
+      const response = await fetch(
+        `${API_URL}/api/events/${selectedEvent._id}/leave`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to leave event");
+      }
+
+      setEvents((currentEvents) =>
+        currentEvents.filter(
+          (event) => event._id !== selectedEvent._id
+        )
+      );
+
+      setSelectedEvent(null);
+      toast.success(data.message || "You have left the event.");
+    } catch (err) {
+      toast.error(err.message || "Unable to leave this event.");
+    } finally {
+      setLeaving(false);
+    }
+  };
+
   if (isPending || loading) {
     return (
       <main className="min-h-screen bg-background px-5 py-16 sm:px-8 lg:px-10">
@@ -110,9 +148,11 @@ export default function JoinedEventsPage() {
           <p className="text-sm font-bold uppercase tracking-widest text-primary">
             Your Participation
           </p>
+
           <h1 className="mt-3 text-3xl font-extrabold text-foreground sm:text-4xl">
             Joined Events
           </h1>
+
           <p className="mt-3 max-w-2xl leading-7 text-muted">
             Keep track of the community events you have joined and get ready
             to make a difference.
@@ -124,9 +164,11 @@ export default function JoinedEventsPage() {
             <h2 className="text-xl font-bold text-foreground">
               Unable to load events
             </h2>
+
             <p className="mt-3 text-muted">
               Something went wrong while loading your joined events.
             </p>
+
             <button
               onClick={() => window.location.reload()}
               className="mt-6 rounded-full bg-primary px-6 py-3 font-bold text-white transition hover:bg-primary-hover"
@@ -139,13 +181,16 @@ export default function JoinedEventsPage() {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-light text-3xl">
               ♡
             </div>
+
             <h2 className="mt-6 text-2xl font-extrabold text-foreground">
               No Joined Events Yet
             </h2>
+
             <p className="mx-auto mt-3 max-w-md leading-7 text-muted">
               You haven't joined any events yet. Explore upcoming community
               events and find a cause you care about.
             </p>
+
             <Link
               href="/events"
               className="mt-7 inline-flex rounded-full bg-primary px-7 py-3 font-bold text-white transition hover:bg-primary-hover"
@@ -159,6 +204,7 @@ export default function JoinedEventsPage() {
               <p className="text-sm font-semibold text-muted">
                 {events.length} {events.length === 1 ? "Event" : "Events"} Joined
               </p>
+
               <Link
                 href="/events"
                 className="text-sm font-bold text-primary hover:underline"
@@ -179,6 +225,7 @@ export default function JoinedEventsPage() {
                       alt={event.title}
                       className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                     />
+
                     <span className="absolute left-4 top-4 rounded-full bg-white px-4 py-2 text-xs font-bold text-primary shadow">
                       {event.type}
                     </span>
@@ -198,17 +245,26 @@ export default function JoinedEventsPage() {
                       <span className="line-clamp-1">{event.location}</span>
                     </p>
 
-                    <div className="mt-5 flex items-center justify-between gap-3 border-t border-border pt-4">
-                      <span className="text-xs font-bold text-green-600">
-                        ✓ Joined
-                      </span>
+                    <div className="mt-5 flex flex-col gap-3 border-t border-border pt-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-green-600">
+                          ✓ Joined
+                        </span>
 
-                      <Link
-                        href={`/events/${event._id}`}
-                        className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-white transition hover:bg-primary-hover"
+                        <Link
+                          href={`/events/${event._id}`}
+                          className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-white transition hover:bg-primary-hover"
+                        >
+                          View Details
+                        </Link>
+                      </div>
+
+                      <button
+                        onClick={() => setSelectedEvent(event)}
+                        className="w-full rounded-full border border-red-200 px-5 py-2.5 text-sm font-bold text-red-600 transition hover:bg-red-50"
                       >
-                        View Details
-                      </Link>
+                        Leave Event
+                      </button>
                     </div>
                   </div>
                 </article>
@@ -217,6 +273,59 @@ export default function JoinedEventsPage() {
           </>
         )}
       </div>
+
+      {/* Leave Event Confirmation Modal */}
+      {selectedEvent && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-5 py-8 backdrop-blur-sm"
+          onClick={() => !leaving && setSelectedEvent(null)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="leave-event-title"
+            className="w-full max-w-md rounded-3xl bg-surface p-7 shadow-2xl sm:p-8"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-50 text-2xl text-red-600">
+              !
+            </div>
+
+            <h2
+              id="leave-event-title"
+              className="mt-5 text-center text-2xl font-extrabold text-foreground"
+            >
+              Leave This Event?
+            </h2>
+
+            <p className="mt-3 text-center leading-7 text-muted">
+              Are you sure you want to leave{" "}
+              <span className="font-bold text-foreground">
+                {selectedEvent.title}
+              </span>
+              ? You can join again later if the event is still available.
+            </p>
+
+            <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row">
+              <button
+                onClick={() => setSelectedEvent(null)}
+                disabled={leaving}
+                className="flex-1 rounded-full border border-border px-5 py-3 font-bold text-foreground transition hover:bg-surface-secondary disabled:opacity-50"
+              >
+                Keep Joined
+              </button>
+
+              <button
+                onClick={handleLeaveEvent}
+                disabled={leaving}
+                className="flex-1 rounded-full bg-red-600 px-5 py-3 font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {leaving ? "Leaving..." : "Yes, Leave"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
