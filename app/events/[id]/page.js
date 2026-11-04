@@ -53,6 +53,21 @@ export default function EventDetailsPage() {
 
         const data = await response.json();
         setEvent(data.event);
+        if (session?.user) {
+          const statusResponse = await fetch(
+            `${API_URL}/api/events/${params.id}/join-status`,
+            {
+              signal: controller.signal,
+              credentials: "include",
+              cache: "no-store",
+            }
+          );
+
+          if (statusResponse.ok) {
+            const statusData = await statusResponse.json();
+            setHasJoined(statusData.hasJoined);
+          }
+        }
       } catch (err) {
         if (err.name !== "AbortError") {
           setError(true);
@@ -67,7 +82,7 @@ export default function EventDetailsPage() {
     fetchEvent();
 
     return () => controller.abort();
-  }, [params.id]);
+  }, [params.id, session?.user?.id]);
 
   const handleJoinEvent = async () => {
     if (!session?.user) {

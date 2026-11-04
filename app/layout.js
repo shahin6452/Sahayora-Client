@@ -1,6 +1,9 @@
+
 import { Manrope, DM_Sans } from "next/font/google";
 import { Toaster } from "sonner";
 import { AuthProvider } from "./providers";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -42,7 +45,9 @@ export default function RootLayout({ children }) {
     >
       <body>
         <AuthProvider>
+          <Navbar />
           {children}
+          <Footer />
         </AuthProvider>
 
         <Toaster
