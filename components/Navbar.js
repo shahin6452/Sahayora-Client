@@ -45,7 +45,7 @@ export default function Navbar() {
   };
 
   const navLinks = [
-    { href: "/events", label: "Explore Events" },
+    { href: "/events", label: "Upcoming Events" },
     { href: "/#about", label: "About Us" },
     { href: "/#how-it-works", label: "How It Works" },
   ];

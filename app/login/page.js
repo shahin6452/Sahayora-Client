@@ -24,7 +24,7 @@ export default function LoginPage() {
       const { error } = await signIn.email({
         email: email.trim(),
         password,
-        callbackURL: "/",
+        callbackURL: `${window.location.origin}/`,
       });
 
       if (error) {
@@ -51,7 +51,7 @@ export default function LoginPage() {
 
       const { error } = await signIn.social({
         provider: "google",
-        callbackURL: "/",
+        callbackURL: `${window.location.origin}/`,
       });
 
       if (error) {

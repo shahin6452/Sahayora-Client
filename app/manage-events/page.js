@@ -6,9 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuth } from "../providers";
-
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+import { apiFetch } from "../../lib/api";
 
 const EMPTY_FORM = {
   title: "",
@@ -70,38 +68,35 @@ export default function ManageEventsPage() {
   const [deletingId, setDeletingId] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
-  const fetchMyEvents = useCallback(
-    async (signal) => {
-      try {
-        setLoading(true);
-        setError(false);
+  // Fetch My Events
+  const fetchMyEvents = useCallback(async (signal) => {
+    try {
+      setLoading(true);
+      setError(false);
 
-        const response = await fetch(`${API_URL}/api/events/my-events`, {
-          credentials: "include",
-          cache: "no-store",
-          signal,
-        });
+      const response = await apiFetch("/api/events/my-events", {
+        cache: "no-store",
+        signal,
+      });
 
-        const data = await response.json();
+      const data = await response.json();
 
-        if (!response.ok) {
-          throw new Error(data.message || "Failed to load your events");
-        }
-
-        setEvents(data.events || []);
-      } catch (err) {
-        if (err.name !== "AbortError") {
-          setError(true);
-          toast.error(err.message || "Unable to load your events.");
-        }
-      } finally {
-        if (!signal?.aborted) {
-          setLoading(false);
-        }
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to load your events");
       }
-    },
-    []
-  );
+
+      setEvents(data.events || []);
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        setError(true);
+        toast.error(err.message || "Unable to load your events.");
+      }
+    } finally {
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (isPending) return;
@@ -119,6 +114,7 @@ export default function ManageEventsPage() {
     return () => controller.abort();
   }, [session?.user?.id, isPending, router, fetchMyEvents]);
 
+  // Open Edit Modal
   const openEditModal = (event) => {
     setEditingEvent(event);
 
@@ -140,6 +136,7 @@ export default function ManageEventsPage() {
     });
   };
 
+  // Close Edit Modal
   const closeEditModal = () => {
     if (saving) return;
 
@@ -147,6 +144,7 @@ export default function ManageEventsPage() {
     setForm(EMPTY_FORM);
   };
 
+  // Form Change
   const handleFormChange = (e) => {
     const { name, value } = e.target;
 
@@ -156,6 +154,7 @@ export default function ManageEventsPage() {
     }));
   };
 
+  // Update Event with JWT
   const handleUpdate = async (e) => {
     e.preventDefault();
 
@@ -164,11 +163,10 @@ export default function ManageEventsPage() {
     try {
       setSaving(true);
 
-      const response = await fetch(
-        `${API_URL}/api/events/${editingEvent._id}`,
+      const response = await apiFetch(
+        `/api/events/${editingEvent._id}`,
         {
           method: "PUT",
-          credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },
@@ -198,17 +196,17 @@ export default function ManageEventsPage() {
     }
   };
 
+  // Delete Event with JWT
   const handleDelete = async () => {
     if (!deletingId) return;
 
     try {
       setDeleting(true);
 
-      const response = await fetch(
-        `${API_URL}/api/events/${deletingId}`,
+      const response = await apiFetch(
+        `/api/events/${deletingId}`,
         {
           method: "DELETE",
-          credentials: "include",
         }
       );
 
@@ -231,11 +229,13 @@ export default function ManageEventsPage() {
     }
   };
 
+  // Loading State
   if (isPending || loading) {
     return (
       <main className="min-h-screen bg-background px-5 py-16 sm:px-8 lg:px-10">
         <div className="mx-auto max-w-7xl">
           <div className="mb-10 h-9 w-64 animate-pulse rounded bg-surface-secondary" />
+
           <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((item) => (
               <EventSkeleton key={item} />
@@ -249,6 +249,7 @@ export default function ManageEventsPage() {
   return (
     <main className="min-h-screen bg-background px-5 py-16 sm:px-8 lg:px-10">
       <div className="mx-auto max-w-7xl">
+        {/* Page Header */}
         <div className="mb-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div>
             <p className="text-sm font-bold uppercase tracking-widest text-primary">
@@ -273,6 +274,7 @@ export default function ManageEventsPage() {
           </Link>
         </div>
 
+        {/* Error State */}
         {error ? (
           <div className="rounded-2xl border border-border bg-surface px-6 py-16 text-center">
             <h2 className="text-xl font-bold text-foreground">
@@ -291,6 +293,7 @@ export default function ManageEventsPage() {
             </button>
           </div>
         ) : events.length === 0 ? (
+          /* Empty State */
           <div className="rounded-3xl border border-border bg-surface px-6 py-20 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-light text-3xl">
               ✳
@@ -320,6 +323,7 @@ export default function ManageEventsPage() {
               </p>
             </div>
 
+            {/* Event Cards */}
             <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
               {events.map((event) => (
                 <article
@@ -511,7 +515,9 @@ export default function ManageEventsPage() {
                   name="date"
                   value={form.date}
                   onChange={handleFormChange}
-                  min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000)
+                  min={new Date(
+                    Date.now() - new Date().getTimezoneOffset() * 60000
+                  )
                     .toISOString()
                     .slice(0, 16)}
                   required

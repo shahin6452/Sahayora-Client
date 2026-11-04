@@ -6,9 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useAuth } from "../providers";
-
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+import { apiFetch } from "../../lib/api";
 
 const eventTypes = [
   "Donation",
@@ -96,9 +94,8 @@ export default function CreateEventPage() {
     try {
       setLoading(true);
 
-      const response = await fetch(`${API_URL}/api/events`, {
+      const response = await apiFetch("/api/events", {
         method: "POST",
-        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },

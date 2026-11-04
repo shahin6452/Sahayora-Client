@@ -6,9 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuth } from "../providers";
-
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+import { apiFetch } from "../../lib/api";
 
 function formatDate(date) {
   return new Date(date).toLocaleDateString("en-US", {
@@ -60,9 +58,8 @@ export default function JoinedEventsPage() {
         setLoading(true);
         setError(false);
 
-        const response = await fetch(`${API_URL}/api/events/joined`, {
+        const response = await apiFetch("/api/events/joined", {
           method: "GET",
-          credentials: "include",
           cache: "no-store",
           signal: controller.signal,
         });
@@ -97,11 +94,10 @@ export default function JoinedEventsPage() {
     try {
       setLeaving(true);
 
-      const response = await fetch(
-        `${API_URL}/api/events/${selectedEvent._id}/leave`,
+      const response = await apiFetch(
+        `/api/events/${selectedEvent._id}/leave`,
         {
           method: "DELETE",
-          credentials: "include",
         }
       );
 

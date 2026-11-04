@@ -66,7 +66,7 @@ export default function EventsPage() {
           </p>
 
           <h1 className="font-[var(--font-manrope)] text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl">
-            Explore Events
+            Upcoming Events
           </h1>
 
           <p className="mt-4 max-w-2xl text-base leading-7 text-muted sm:text-lg">
