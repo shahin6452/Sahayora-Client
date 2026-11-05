@@ -4,7 +4,7 @@
 
 Sahayora is a community-driven platform that connects people through social development activities and volunteering opportunities.
 
-**Live Website:** `https://YOUR-LIVE-URL.vercel.app`
+**Live Website:** `https://sahayora-client.vercel.app/`
 
 ## Features
 
