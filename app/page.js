@@ -6,11 +6,15 @@ import { useAuth } from "./providers";
 import { signOut } from "../lib/auth-client";
 import { toast } from "sonner";
 
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
 const eventColors = ["#F08A72", "#A59AF2", "#E8C96A"];
 
 const formatEventDate = (value) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "DATE TBA";
+
   return date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -25,21 +29,22 @@ const ArrowUpRight = () => (
 );
 
 export default function Home() {
-  const { data: session, isPending } = useAuth();
+  const { data: session } = useAuth();
   const user = session?.user;
 
   const [events, setEvents] = useState([]);
   const [eventsLoading, setEventsLoading] = useState(true);
 
+  const [completedEvents, setCompletedEvents] = useState([]);
+  const [completedLoading, setCompletedLoading] = useState(true);
+
+  // Fetch Upcoming Events
   useEffect(() => {
     const controller = new AbortController();
 
     const loadEvents = async () => {
       try {
-        const apiUrl =
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-
-        const response = await fetch(`${apiUrl}/api/events?limit=6`, {
+        const response = await fetch(`${API_URL}/api/events?limit=6`, {
           signal: controller.signal,
           cache: "no-store",
         });
@@ -67,6 +72,42 @@ export default function Home() {
     return () => controller.abort();
   }, []);
 
+  // Fetch Completed Events
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadCompletedEvents = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/events/completed`, {
+          signal: controller.signal,
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Could not load completed events.");
+        }
+
+        const result = await response.json();
+        setCompletedEvents(
+          Array.isArray(result.events) ? result.events : []
+        );
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          toast.error(error.message || "Failed to load completed events.");
+          setCompletedEvents([]);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setCompletedLoading(false);
+        }
+      }
+    };
+
+    loadCompletedEvents();
+
+    return () => controller.abort();
+  }, []);
+
   const handleLogout = async () => {
     try {
       await signOut();
@@ -78,111 +119,87 @@ export default function Home() {
 
   return (
     <main className="overflow-hidden bg-background text-foreground">
-      
+
       {/* HERO */}
-      <section className="relative">
-        <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 pb-20 pt-16 sm:px-8 md:pt-24 lg:grid-cols-[1.05fr_0.95fr] lg:px-10 lg:pb-28 lg:pt-24">
-          <div className="relative z-10">
-            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2">
-              <span className="h-2 w-2 rounded-full bg-accent" />
-              <span className="text-xs font-bold uppercase tracking-[0.16em] text-muted">
-                A little good goes a long way
-              </span>
-            </div>
-
-            <h1 className="max-w-2xl text-5xl font-extrabold leading-[1.08] tracking-[-0.055em] sm:text-6xl lg:text-7xl xl:text-[82px]">
-              Make room
-              <br />
-              for <span className="text-primary">good.</span>
-              <br />
-              Make it
-              <br />
-              <span className="relative inline-block">
-                happen.
-                <span className="absolute -bottom-1 left-0 -z-10 h-3 w-full -rotate-2 rounded-full bg-accent/50" />
-              </span>
-            </h1>
-
-            <p className="mt-8 max-w-lg text-base leading-8 text-muted sm:text-lg">
-              Big change doesn't need a big beginning. Find meaningful
-              community events, meet people who care, and turn small acts
-              into something wonderful.
-            </p>
-
-            <div className="mt-9 flex flex-wrap items-center gap-4">
-              <Link
-                href="/events"
-                className="inline-flex items-center gap-3 rounded-full bg-primary px-7 py-4 font-bold text-white shadow-lg shadow-primary/20 transition hover:-translate-y-1 hover:bg-primary-hover"
-              >
-                Explore Events <ArrowUpRight />
-              </Link>
-
-              <Link
-                href="/register"
-                className="inline-flex items-center gap-2 rounded-full border border-border px-7 py-4 font-bold transition hover:border-primary hover:text-primary"
-              >
-                Become a Volunteer
-              </Link>
-            </div>
-
-            <div className="mt-14 flex items-center gap-5 border-t border-border pt-7">
-              <div className="flex -space-x-3">
-                {[
-                  "photo-1534528741775-53994a69daeb",
-                  "photo-1500648767791-00dcc994a43e",
-                  "photo-1531123897727-8f129e1688ce",
-                ].map((photo) => (
-                  <img
-                    key={photo}
-                    src={`https://images.unsplash.com/${photo}?w=100&q=80`}
-                    alt="Community volunteer"
-                    className="h-11 w-11 rounded-full border-[3px] border-background object-cover"
-                  />
-                ))}
-              </div>
-
-              <div>
-                <p className="text-sm font-extrabold">People who care.</p>
-                <p className="text-xs text-muted">
-                  Coming together for a better tomorrow.
-                </p>
-              </div>
-            </div>
+      <section className="relative overflow-hidden">
+        <div className="mx-auto max-w-7xl px-5 pb-16 pt-14 text-center sm:px-8 sm:pb-20 sm:pt-20 lg:px-10 lg:pb-24 lg:pt-24">
+          <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2">
+            <span className="text-sm text-accent">✳</span>
+            <span className="text-xs font-bold tracking-wide text-muted sm:text-sm">
+              Community-Driven Social Development Platform
+            </span>
           </div>
 
-          {/* HERO VISUAL */}
-          <div className="relative mx-auto w-full max-w-xl lg:ml-auto">
-            <div className="relative aspect-[0.92]">
-              <div className="absolute right-2 top-0 h-[77%] w-[76%] overflow-hidden rounded-[48%_48%_18px_18px] bg-secondary">
-                <img
-                  src="https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?w=1000&q=90"
-                  alt="Volunteers working together"
-                  className="h-full w-full object-cover"
-                />
-              </div>
+          <h1 className="mx-auto mt-7 max-w-5xl font-[var(--font-manrope)] text-4xl font-extrabold leading-[1.12] tracking-[-0.045em] text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
+            Gather for Good.{" "}
+            <span className="text-primary">
+              Transform Your Neighborhood.
+            </span>
+          </h1>
 
-              <div className="absolute bottom-[4%] left-0 h-[46%] w-[51%] overflow-hidden rounded-2xl border-[7px] border-background shadow-xl">
-                <img
-                  src="https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=700&q=85"
-                  alt="Community volunteering"
-                  className="h-full w-full object-cover"
-                />
-              </div>
+          <p className="mx-auto mt-7 max-w-3xl text-base leading-8 text-muted sm:text-lg">
+            Create, discover, and join local social service drives in your
+            neighborhood. From winter clothes and blanket distribution in
+            Mirpur and Mohammadpur to urban tree plantations and cleanups.
+          </p>
 
-              <div className="absolute left-[4%] top-[9%] flex h-20 w-20 rotate-[-12deg] items-center justify-center rounded-2xl bg-highlight text-4xl shadow-lg sm:h-24 sm:w-24">
-                ✳
-              </div>
+          <div className="mt-9 flex flex-col items-stretch justify-center gap-4 sm:flex-row sm:items-center">
+            <Link
+              href="/events"
+              className="inline-flex items-center justify-center gap-3 rounded-xl bg-primary px-7 py-4 font-bold !text-white shadow-lg shadow-primary/20 transition hover:-translate-y-1 hover:bg-primary-hover"
+            >
+              Explore Upcoming Events <ArrowUpRight />
+            </Link>
 
-              <div className="absolute bottom-[10%] right-0 max-w-[190px] rounded-2xl bg-primary p-5 text-white shadow-xl sm:max-w-[215px] sm:p-6">
-                <p className="text-3xl font-extrabold">01.</p>
-                <p className="mt-2 text-sm font-semibold leading-6">
-                  Every little action can make a real difference.
+            <Link
+              href={user ? "/create-event" : "/login"}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-surface px-7 py-4 font-bold text-foreground transition hover:-translate-y-1 hover:border-primary hover:text-primary"
+            >
+              <span className="text-primary" aria-hidden="true">
+                ♡
+              </span>
+              Create an Event
+            </Link>
+          </div>
+
+          {/* Community Statistics */}
+          <div className="mx-auto mt-16 grid max-w-5xl grid-cols-2 gap-3 sm:mt-20 sm:gap-4 lg:grid-cols-4">
+            {[
+              {
+                value: "1,450+",
+                label: "Active Volunteers",
+                color: "text-primary",
+              },
+              {
+                value: "180+",
+                label: "Events Completed",
+                color: "text-accent",
+              },
+              {
+                value: "24,000+",
+                label: "Lives Impacted",
+                color: "text-[#5146A5]",
+              },
+              {
+                value: "100%",
+                label: "Community Driven",
+                color: "text-[#C18A20]",
+              },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="rounded-2xl border border-border bg-surface px-4 py-6 shadow-sm sm:px-5 sm:py-7"
+              >
+                <p
+                  className={`text-3xl font-extrabold tracking-tight sm:text-4xl ${stat.color}`}
+                >
+                  {stat.value}
                 </p>
-                <div className="mt-3 text-2xl text-accent">↗</div>
+                <p className="mt-2 text-xs font-medium text-muted sm:text-sm">
+                  {stat.label}
+                </p>
               </div>
-
-              <div className="absolute right-[5%] top-[4%] -z-10 h-28 w-28 rounded-full border border-accent sm:h-36 sm:w-36" />
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -207,7 +224,6 @@ export default function Home() {
           </p>
         </div>
       </section>
-
       {/* ABOUT */}
       <section
         id="about"
@@ -253,7 +269,8 @@ export default function Home() {
               </p>
 
               <h2 className="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl">
-                Three steps. <span className="text-primary">Real impact.</span>
+                Three steps.{" "}
+                <span className="text-primary">Real impact.</span>
               </h2>
             </div>
 
@@ -312,8 +329,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* EVENTS */}
+      {/* UPCOMING EVENTS */}
       <section
         id="events"
         className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:px-10 lg:py-32"
@@ -325,7 +341,8 @@ export default function Home() {
             </p>
 
             <h2 className="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl">
-              Get out there. <span className="text-primary">Do good.</span>
+              Get out there.{" "}
+              <span className="text-primary">Do good.</span>
             </h2>
 
             <p className="mt-4 max-w-lg leading-7 text-muted">
@@ -352,7 +369,6 @@ export default function Home() {
                 className="overflow-hidden rounded-2xl border border-border bg-surface"
               >
                 <div className="aspect-[1.35] animate-pulse bg-surface-secondary" />
-
                 <div className="space-y-4 p-7">
                   <div className="h-3 w-1/2 animate-pulse rounded bg-surface-secondary" />
                   <div className="h-6 w-4/5 animate-pulse rounded bg-surface-secondary" />
@@ -422,10 +438,10 @@ export default function Home() {
                   </p>
 
                   <Link
-                    href="/events"
+                    href={`/events/${event._id || event.id}`}
                     className="mt-7 inline-flex items-center gap-3 border-b border-foreground/20 pb-2 text-sm font-extrabold transition group-hover:border-primary group-hover:text-primary"
                   >
-                    Explore event <ArrowUpRight />
+                    View Event <ArrowUpRight />
                   </Link>
                 </div>
               </article>
@@ -434,8 +450,88 @@ export default function Home() {
         )}
       </section>
 
+      {/* COMMUNITY IN ACTION - COMPLETED EVENTS */}
+      <section
+        id="community-in-action"
+        className="bg-surface-secondary py-24"
+      >
+        <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
+          <div className="mb-12 text-center">
+            <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-accent">
+              VISUAL STORIES
+            </p>
+
+            <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
+              Community in Action
+            </h2>
+
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-muted">
+              Moments from volunteer drives, relief distributions, and green
+              initiatives across Dhaka and beyond.
+            </p>
+          </div>
+
+          {completedLoading ? (
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="aspect-[1.25] animate-pulse rounded-2xl bg-surface"
+                />
+              ))}
+            </div>
+          ) : completedEvents.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border bg-surface px-6 py-14 text-center">
+              <p className="text-xl font-extrabold">
+                No completed events yet
+              </p>
+              <p className="mt-3 text-sm text-muted">
+                Completed community events will appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {completedEvents.map((event) => (
+                <Link
+                  key={event._id}
+                  href={`/events/${event._id}`}
+                  className="group relative block aspect-[1.25] overflow-hidden rounded-2xl bg-surface shadow-sm"
+                >
+                  <img
+                    src={event.image}
+                    alt={event.title}
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-110"
+                  />
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-transparent" />
+
+                  <div className="absolute inset-x-0 bottom-0 p-5 text-white sm:p-6">
+                    <span className="inline-flex rounded-md bg-primary px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white">
+                      {event.type || "Community"}
+                    </span>
+
+                    <h3 className="mt-3 text-xl font-extrabold leading-tight">
+                      {event.title}
+                    </h3>
+
+                    <p className="mt-2 flex items-center gap-2 text-xs font-medium text-white/80">
+                      <span aria-hidden="true">⌖</span>
+                      <span>{event.location}</span>
+                    </p>
+
+                    <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-white/65">
+                      Completed · {formatEventDate(event.date)}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
       {/* COMMUNITY CTA */}
-      <section className="px-5 pb-24 sm:px-8 lg:px-10">
+      <section className="px-5 py-24 sm:px-8 lg:px-10">
         <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[2rem] bg-[#25233A] px-7 py-16 text-white sm:px-14 sm:py-20 lg:px-20">
           <div className="absolute -right-16 -top-20 h-72 w-72 rounded-full border border-white/10" />
           <div className="absolute -right-4 -top-8 h-52 w-52 rounded-full border border-white/10" />
