@@ -297,7 +297,7 @@ export default function ManageEventsPage() {
 
           <Link
             href="/create-event"
-            className="inline-flex w-fit items-center justify-center rounded-full bg-primary px-6 py-3 font-bold text-white transition hover:bg-primary-hover"
+            className="inline-flex w-fit items-center justify-center rounded-full bg-primary px-6 py-3 font-bold !text-white transition hover:bg-primary-hover"
           >
             + Create Event
           </Link>
