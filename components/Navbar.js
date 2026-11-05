@@ -173,7 +173,7 @@ export default function Navbar() {
 
               <Link
                 href="/register"
-                className="hidden rounded-full bg-primary px-5 py-3 text-sm font-bold text-white transition hover:bg-primary-hover sm:inline-flex"
+                className="hidden rounded-full bg-primary px-5 py-3 text-sm font-bold !text-white transition hover:bg-primary-hover sm:inline-flex"
               >
                 Get Started <span className="ml-1">↗</span>
               </Link>
@@ -250,7 +250,7 @@ export default function Navbar() {
               <Link
                 href="/register"
                 onClick={closeMenu}
-                className="rounded-full bg-primary px-4 py-3 text-center text-sm font-bold text-white"
+                className="rounded-full bg-primary px-4 py-3 text-center text-sm font-bold !text-white"
               >
                 Get Started
               </Link>

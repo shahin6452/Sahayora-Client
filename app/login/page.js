@@ -1,19 +1,26 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn } from "@/lib/auth-client";
+import { signIn, useSession } from "@/lib/auth-client";
 import { toast } from "sonner";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { data: session, isPending } = useSession();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isPending && session?.user) {
+      router.replace("/");
+    }
+  }, [session, isPending, router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -64,10 +71,18 @@ export default function LoginPage() {
     }
   };
 
+  if (isPending || session?.user) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </main>
+    );
+  }
+
   return (
-    <main className="min-h-screen bg-[#FBF8F2] px-5 py-12 text-[#25233A]">
+    <main className="min-h-screen bg-background px-5 py-12 text-foreground">
       <div className="mx-auto flex min-h-[80vh] max-w-6xl items-center justify-center">
-        <div className="grid w-full overflow-hidden rounded-3xl bg-white shadow-xl md:grid-cols-2">
+        <div className="grid w-full overflow-hidden rounded-3xl bg-surface shadow-xl md:grid-cols-2">
           <div className="hidden flex-col justify-between bg-[#5146A5] p-12 text-white md:flex">
             <Link href="/" className="text-2xl font-bold">
               Sahayora.
@@ -96,7 +111,7 @@ export default function LoginPage() {
           <div className="px-6 py-10 sm:px-12 md:py-16">
             <Link
               href="/"
-              className="text-xl font-bold text-[#5146A5] md:hidden"
+              className="text-xl font-bold text-primary md:hidden"
             >
               Sahayora.
             </Link>
@@ -104,7 +119,7 @@ export default function LoginPage() {
             <div className="mt-8 md:mt-0">
               <h2 className="text-3xl font-bold">Welcome back</h2>
 
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-2 text-sm text-muted">
                 Sign in to continue making a difference.
               </p>
             </div>
@@ -122,7 +137,7 @@ export default function LoginPage() {
                   placeholder="you@example.com"
                   required
                   autoComplete="email"
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-[#5146A5] focus:ring-2 focus:ring-[#5146A5]/10"
+                  className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none transition placeholder:text-muted/70 focus:border-primary focus:ring-2 focus:ring-primary/10"
                 />
               </div>
 
@@ -138,7 +153,7 @@ export default function LoginPage() {
                   placeholder="Enter your password"
                   required
                   autoComplete="current-password"
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-[#5146A5] focus:ring-2 focus:ring-[#5146A5]/10"
+                  className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none transition placeholder:text-muted/70 focus:border-primary focus:ring-2 focus:ring-primary/10"
                 />
               </div>
 
@@ -153,11 +168,11 @@ export default function LoginPage() {
 
             <div className="relative my-7">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200" />
+                <div className="w-full border-t border-border" />
               </div>
 
               <div className="relative flex justify-center">
-                <span className="bg-white px-4 text-sm text-gray-400">
+                <span className="bg-surface px-4 text-sm text-muted">
                   OR CONTINUE WITH
                 </span>
               </div>
@@ -167,7 +182,7 @@ export default function LoginPage() {
               type="button"
               onClick={handleGoogleLogin}
               disabled={googleLoading || loading}
-              className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 px-5 py-3.5 font-semibold text-[#25233A] transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-surface px-5 py-3.5 font-semibold text-foreground transition hover:bg-surface-secondary disabled:cursor-not-allowed disabled:opacity-60"
             >
               {googleLoading ? (
                 "Connecting to Google..."
@@ -202,11 +217,11 @@ export default function LoginPage() {
               )}
             </button>
 
-            <p className="mt-7 text-center text-sm text-gray-500">
+            <p className="mt-7 text-center text-sm text-muted">
               Don&apos;t have an account?{" "}
               <Link
                 href="/register"
-                className="font-semibold text-[#5146A5] hover:underline"
+                className="font-semibold text-primary hover:underline"
               >
                 Create Account
               </Link>

@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -17,11 +16,37 @@ const eventTypes = [
   "Other",
 ];
 
+// Sahayora events use Bangladesh Standard Time (UTC+06:00).
+const DHAKA_OFFSET_MS = 6 * 60 * 60 * 1000;
+
+function getDhakaDateTimeLocal(date = new Date()) {
+  return new Date(date.getTime() + DHAKA_OFFSET_MS)
+    .toISOString()
+    .slice(0, 16);
+}
+
+function dhakaDateTimeLocalToISO(value) {
+  const withSeconds = value.length === 16 ? `${value}:00` : value;
+  const date = new Date(`${withSeconds}+06:00`);
+
+  if (Number.isNaN(date.getTime())) {
+    throw new Error("Please select a valid event date and time.");
+  }
+
+  return date.toISOString();
+}
+
 export default function CreateEventPage() {
   const router = useRouter();
   const { data: session, isPending } = useAuth();
 
   const [loading, setLoading] = useState(false);
+  const [minimumDate, setMinimumDate] = useState("");
+
+  // Calculate the minimum date on the client to avoid prerender-time Date access.
+  useEffect(() => {
+    setMinimumDate(getDhakaDateTimeLocal());
+  }, []);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -33,13 +58,6 @@ export default function CreateEventPage() {
   });
 
   const [errors, setErrors] = useState({});
-
-  const today = new Date();
-  const localDate = new Date(
-    today.getTime() - today.getTimezoneOffset() * 60000
-  )
-    .toISOString()
-    .slice(0, 16);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -71,11 +89,12 @@ export default function CreateEventPage() {
       newErrors.image = "Please enter a valid image URL";
     }
 
-    if (
-      formData.date &&
-      new Date(formData.date) <= new Date()
-    ) {
-      newErrors.date = "Please select a future date and time";
+    if (formData.date) {
+      const selectedDate = new Date(dhakaDateTimeLocalToISO(formData.date));
+
+      if (selectedDate <= new Date()) {
+        newErrors.date = "Please select a future date and time";
+      }
     }
 
     setErrors(newErrors);
@@ -99,7 +118,11 @@ export default function CreateEventPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          // Convert Bangladesh local datetime to an explicit UTC ISO timestamp.
+          date: dhakaDateTimeLocalToISO(formData.date),
+        }),
       });
 
       const data = await response.json();
@@ -110,7 +133,7 @@ export default function CreateEventPage() {
 
       toast.success("Event created successfully!");
 
-      router.push(`/events/${data.event._id}`);
+      router.push("/events");
     } catch (error) {
       toast.error(error.message || "Something went wrong.");
     } finally {
@@ -303,7 +326,7 @@ export default function CreateEventPage() {
               id="date"
               name="date"
               type="datetime-local"
-              min={localDate}
+              min={minimumDate}
               value={formData.date}
               onChange={handleChange}
               className={inputClass}

@@ -530,40 +530,74 @@ export default function Home() {
           )}
         </div>
       </section>
-      {/* COMMUNITY CTA */}
-      <section className="px-5 py-24 sm:px-8 lg:px-10">
-        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[2rem] bg-[#25233A] px-7 py-16 text-white sm:px-14 sm:py-20 lg:px-20">
+
+      {/* NEWSLETTER SUBSCRIPTION */}
+      <section className="px-5 pb-24 sm:px-8 lg:px-10">
+        <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[2rem] bg-[#25233A] px-7 py-14 text-white sm:px-14 sm:py-20 lg:px-20">
+          {/* Decorative Elements */}
           <div className="absolute -right-16 -top-20 h-72 w-72 rounded-full border border-white/10" />
           <div className="absolute -right-4 -top-8 h-52 w-52 rounded-full border border-white/10" />
           <div className="absolute bottom-0 right-[20%] h-36 w-36 rounded-full bg-accent/20 blur-3xl" />
 
-          <div className="relative z-10 max-w-2xl">
-            <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#F08A72]">
-              YOUR TURN TO MAKE A DIFFERENCE
-            </p>
+          <div className="relative z-10 grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
+            {/* Newsletter Content */}
+            <div>
+              <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-[#F08A72]">
+                STAY CONNECTED
+              </p>
 
-            <h2 className="mt-6 text-4xl font-extrabold leading-tight tracking-tight sm:text-6xl">
-              The world needs more people like you.
-            </h2>
+              <h2 className="mt-6 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
+                Good things are
+                <span className="text-[#F08A72]"> worth sharing.</span>
+              </h2>
 
-            <p className="mt-6 max-w-lg leading-8 text-white/65">
-              Join a community that believes in kindness, action, and making
-              good things happen. Your next step starts here.
-            </p>
+              <p className="mt-6 max-w-lg leading-8 text-white/65">
+                Get inspiring community stories, upcoming events, and
+                opportunities to make a difference delivered straight to
+                your inbox.
+              </p>
+            </div>
 
-            <Link
-              href="/register"
-              className="mt-9 inline-flex items-center gap-3 rounded-full bg-[#F08A72] px-7 py-4 font-extrabold text-[#25233A] transition hover:-translate-y-1 hover:bg-[#ffab98]"
-            >
-              Join Sahayora <ArrowUpRight />
-            </Link>
+            {/* Subscription Form - Static Design Only */}
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm sm:p-8">
+              <h3 className="text-xl font-extrabold">
+                Subscribe to our newsletter
+              </h3>
+
+              <p className="mt-2 text-sm leading-6 text-white/55">
+                Be the first to know about our latest activities and updates.
+              </p>
+
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <input
+                  type="email"
+                  placeholder="Enter your email address"
+                  aria-label="Email address"
+                  className="min-w-0 flex-1 rounded-full border border-white/15 bg-white/10 px-5 py-4 text-sm text-white outline-none placeholder:text-white/40 transition focus:border-[#F08A72]"
+                />
+
+                <button
+                  type="button"
+                  className="rounded-full bg-[#F08A72] px-7 py-4 text-sm font-extrabold text-[#25233A] transition hover:-translate-y-1 hover:bg-[#ffab98]"
+                >
+                  Subscribe
+                </button>
+              </div>
+
+              <p className="mt-5 text-xs leading-5 text-white/40">
+                By subscribing, you agree to receive updates from Sahayora.
+              </p>
+            </div>
           </div>
 
-          <div className="absolute bottom-8 right-12 hidden text-[150px] leading-none text-white/5 lg:block">
+          <div className="absolute bottom-5 right-8 hidden text-7xl leading-none text-white/5 lg:block">
             ✳
           </div>
         </div>
       </section>
+
+
+
     </main>
   );
 }

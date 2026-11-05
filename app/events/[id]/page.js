@@ -363,7 +363,7 @@ export default function EventDetailsPage() {
                 ) : (
                   <Link
                     href="/login"
-                    className="min-w-36 rounded-xl bg-primary px-5 py-3 text-center text-sm font-bold text-white transition hover:bg-primary-hover"
+                    className="min-w-36 rounded-xl bg-primary px-5 py-3 text-center text-sm font-bold !text-white transition hover:bg-primary-hover"
                   >
                     Login to Join
                   </Link>

@@ -28,6 +28,33 @@ const EVENT_TYPES = [
   "Other",
 ];
 
+// Sahayora events use Bangladesh Standard Time (UTC+06:00).
+const DHAKA_OFFSET_MS = 6 * 60 * 60 * 1000;
+
+function getDhakaDateTimeLocal(date = new Date()) {
+  return new Date(date.getTime() + DHAKA_OFFSET_MS)
+    .toISOString()
+    .slice(0, 16);
+}
+
+function dhakaDateTimeLocalToISO(value) {
+  const withSeconds = value.length === 16 ? `${value}:00` : value;
+  const date = new Date(`${withSeconds}+06:00`);
+
+  if (Number.isNaN(date.getTime())) {
+    throw new Error("Please select a valid event date and time.");
+  }
+
+  return date.toISOString();
+}
+
+function isoToDhakaDateTimeLocal(value) {
+  const date = new Date(value);
+  return new Date(date.getTime() + DHAKA_OFFSET_MS)
+    .toISOString()
+    .slice(0, 16);
+}
+
 function formatDate(date) {
   return new Date(date).toLocaleDateString("en-US", {
     month: "long",
@@ -64,6 +91,11 @@ export default function ManageEventsPage() {
   const [editingEvent, setEditingEvent] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [minimumDate, setMinimumDate] = useState("");
+
+  useEffect(() => {
+    setMinimumDate(getDhakaDateTimeLocal());
+  }, []);
 
   const [deletingId, setDeletingId] = useState(null);
   const [deleting, setDeleting] = useState(false);
@@ -102,7 +134,6 @@ export default function ManageEventsPage() {
     if (isPending) return;
 
     if (!session?.user) {
-      setLoading(false);
       router.replace("/login");
       return;
     }
@@ -118,13 +149,7 @@ export default function ManageEventsPage() {
   const openEditModal = (event) => {
     setEditingEvent(event);
 
-    const localDate = new Date(event.date);
-    const timezoneOffset = localDate.getTimezoneOffset() * 60000;
-    const localDateTime = new Date(
-      localDate.getTime() - timezoneOffset
-    )
-      .toISOString()
-      .slice(0, 16);
+    const localDateTime = isoToDhakaDateTimeLocal(event.date);
 
     setForm({
       title: event.title || "",
@@ -170,7 +195,11 @@ export default function ManageEventsPage() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(form),
+          body: JSON.stringify({
+            ...form,
+            // Convert the edited Bangladesh local datetime to explicit UTC.
+            date: dhakaDateTimeLocalToISO(form.date),
+          }),
         }
       );
 
@@ -230,7 +259,7 @@ export default function ManageEventsPage() {
   };
 
   // Loading State
-  if (isPending || loading) {
+  if (isPending || loading || !session?.user) {
     return (
       <main className="min-h-screen bg-background px-5 py-16 sm:px-8 lg:px-10">
         <div className="mx-auto max-w-7xl">
@@ -515,11 +544,7 @@ export default function ManageEventsPage() {
                   name="date"
                   value={form.date}
                   onChange={handleFormChange}
-                  min={new Date(
-                    Date.now() - new Date().getTimezoneOffset() * 60000
-                  )
-                    .toISOString()
-                    .slice(0, 16)}
+                  min={minimumDate}
                   required
                   className="w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none transition focus:border-primary"
                 />

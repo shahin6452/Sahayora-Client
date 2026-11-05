@@ -46,7 +46,6 @@ export default function JoinedEventsPage() {
     if (isPending) return;
 
     if (!session?.user) {
-      setLoading(false);
       router.replace("/login");
       return;
     }
@@ -122,7 +121,7 @@ export default function JoinedEventsPage() {
     }
   };
 
-  if (isPending || loading) {
+  if (isPending || loading || !session?.user) {
     return (
       <main className="min-h-screen bg-background px-5 py-16 sm:px-8 lg:px-10">
         <div className="mx-auto max-w-7xl">
@@ -189,7 +188,7 @@ export default function JoinedEventsPage() {
 
             <Link
               href="/events"
-              className="mt-7 inline-flex rounded-full bg-primary px-7 py-3 font-bold text-white transition hover:bg-primary-hover"
+              className="mt-7 inline-flex rounded-full bg-primary px-7 py-3 font-bold !text-white transition hover:bg-primary-hover"
             >
               Explore Events
             </Link>
