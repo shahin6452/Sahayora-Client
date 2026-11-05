@@ -248,7 +248,7 @@ export default function JoinedEventsPage() {
 
                         <Link
                           href={`/events/${event._id}`}
-                          className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-white transition hover:bg-primary-hover"
+                          className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold !text-white transition hover:bg-primary-hover"
                         >
                           View Details
                         </Link>
